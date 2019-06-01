@@ -1,6 +1,9 @@
 const { resolve } = require("path");
+const merge = require("webpack-merge")
+const parts = require("./webpack.parts");
+
 const nodeExternals = require("webpack-node-externals");
-module.exports = {
+const config = {
     entry: "./src/server-entry.js",
     output: {
         path: resolve("dist"),
@@ -9,27 +12,22 @@ module.exports = {
     },
     target: "node",
     externals: [nodeExternals()],
-    module: {
-        rules: [{
-            test: /\.(js|jsx)$/,
-            use: {
-                loader: 'babel-loader',
-                options: {
-                    presets: ['@babel/preset-react']
-                }
-            },
-            exclude: /(node_modules)/
-        }, {
-            test: /\.(svg|gif|jpe?g|png|css)$/,
-            loader: "file-loader",
-            options: {
-                name: "assets/images/[name].[ext]",
-                publicPath: (url) => url.replace("assets", ""),
-                emitFile: false
-            }
-        }]
-    },
     resolve: {
         extensions: ['.js', '.jsx']
     },
 }
+module.exports = merge([
+    config,
+    parts.loadJS({
+        exclude: /(node_modules)/,
+        options: {
+            presets: ["@babel/preset-react"]
+        }
+    }),
+    parts.loadImg({
+        reg: /\.(svg|gif|jpe?g|png|css)$/,
+        isWriteFile: false,
+        publicPath: (url) => url.replace("assets", ""),
+        name: "assets/images/[name].[ext]",
+    })
+])
